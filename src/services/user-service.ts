@@ -23,3 +23,15 @@ export const createUser = async ({ name, email, password }: CreateUserProps) => 
         data: { name, email, password: encodePassword }
     })
 };
+
+export const getById = async (id: number) => {
+    return await prisma.user.findUnique({
+        where: {id},
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            status: true
+        }
+    })
+}
