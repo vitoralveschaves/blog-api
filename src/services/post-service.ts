@@ -1,5 +1,6 @@
 import slug from "slug"
 import { prisma } from "../libs/prisma";
+import { Prisma } from "../generated/prisma";
 
 export const createPostSlug = async (title: string) => {
 
@@ -40,5 +41,18 @@ type CreatePostProps = {
 }
 
 export const createPost = async (data: CreatePostProps) => {
-    return await prisma.post.create({ data })
+    return await prisma.post.create({ data });
+}
+
+export const updatePost = async (slug: string, data: Prisma.PostUpdateInput) => {
+    return await prisma.post.update({
+        where: {slug},
+        data
+    });
+}
+
+export const deletePost = async (slug: string) => {
+    return await prisma.post.delete({
+        where: {slug}
+    });
 }

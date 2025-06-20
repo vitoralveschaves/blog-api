@@ -1,7 +1,7 @@
 import { RequestHandler, Response } from "express";
 import { ExtendedRequest } from "../types/extended-request";
 import { z } from "zod";
-import { createPost, createPostSlug } from "../services/post-service";
+import { createPost, createPostSlug, deletePost, getPostBySlug, updatePost } from "../services/post-service";
 import { getById } from "../services/user-service";
 
 export const addPost = async (req: ExtendedRequest, res: Response) => {
@@ -45,7 +45,66 @@ export const addPost = async (req: ExtendedRequest, res: Response) => {
     })
 };
 
+export const editPost = async (req: ExtendedRequest, res: Response) => {
+    const { slug } = req.params;
+
+    const schema = z.object({
+        status: z.enum(["PUBLISHED", "DRAFT"]).optional(),
+        title: z.string().optional(),
+        body: z.string().optional(),
+        tags: z.string().optional()
+    })
+
+    const data = schema.safeParse(req.body);
+
+    if(!data.success) {
+        res.status(422).json({error: data.error.flatten().fieldErrors});
+        return;
+    }
+
+    const post = await getPostBySlug(slug);
+
+    if(!post) {
+        res.status(404).json({error: "Post não encontrado"});
+        return;
+    }
+
+    const updatedPost = await updatePost(slug, {
+        title: data.data.title ?? undefined,
+        body: data.data.body ?? undefined,
+        tags: data.data.tags ?? undefined,
+        status: data.data.status ?? undefined
+    });
+
+    const author = await getById(updatedPost.authorId);
+
+    res.status(200).json({
+        post: {
+            id: updatedPost.id,
+            slug: updatedPost.slug,
+            title: updatedPost.title,
+            body: updatedPost.body,
+            tags: updatedPost.tags,
+            authorName: author?.name
+        }
+    });
+};
+
+export const removePost = async (req: ExtendedRequest, res: Response) => {
+
+    const { slug } = req.params;
+
+    const post = await getPostBySlug(slug);
+
+    if(!post) {
+        res.status(404).json({error: "Post não encontrado"});
+        return;
+    }
+
+    await deletePost(slug);
+
+    res.status(204);
+};
+
 export const getPosts: RequestHandler = async (req, res) => {};
 export const getPost: RequestHandler = async (req, res) => {};
-export const editPost: RequestHandler = async (req, res) => {};
-export const removePost: RequestHandler = async (req, res) => {};
