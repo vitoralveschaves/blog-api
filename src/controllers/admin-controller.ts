@@ -1,7 +1,7 @@
 import { RequestHandler, Response } from "express";
 import { ExtendedRequest } from "../types/extended-request";
 import { z } from "zod";
-import { createPost, createPostSlug, deletePost, getPostBySlug, updatePost } from "../services/post-service";
+import { createPost, createPostSlug, deletePost, getAllPosts, getPostBySlug, updatePost } from "../services/post-service";
 import { getById } from "../services/user-service";
 
 export const addPost = async (req: ExtendedRequest, res: Response) => {
@@ -106,5 +106,56 @@ export const removePost = async (req: ExtendedRequest, res: Response) => {
     res.status(204);
 };
 
-export const getPosts: RequestHandler = async (req, res) => {};
-export const getPost: RequestHandler = async (req, res) => {};
+export const getPosts = async (req: ExtendedRequest, res: Response) => {
+
+    let page = 1;
+
+    if(req.query.page) {
+        page = parseInt(req.query.page as string);
+        if(page <= 0) {
+            res.status(400).json({error: "Pagina inexistente"});
+            return;
+        }
+    }
+
+    let posts = await getAllPosts(page);
+
+    const postsToReturn = posts.map(post => ({
+        id: post.id,
+        title: post.title,
+        body: post.body,
+        tags: post.tags,
+        slug: post.slug,
+        status: post.status,
+        authorName: post.author?.name,
+        createdAt: post.createdAt,
+    }))
+
+    res.status(200).json({
+        posts: postsToReturn,
+        page
+    })
+};
+
+export const getPost = async (req: ExtendedRequest, res: Response) => {
+
+    const {slug} = req.params;
+
+    const post = await getPostBySlug(slug);
+
+    if(!post) {
+        res.status(404).json({error: "Post não encontrado"});
+        return;
+    }
+
+    res.status(200).json({
+        id: post.id,
+        title: post.title,
+        body: post.body,
+        status: post.status,
+        tags: post.tags,
+        authorName: post.author?.name,
+        slug: post.slug,
+        createdAt: post.createdAt
+    })
+};

@@ -7,3 +7,5 @@ export const adminRoutes = Router();
 adminRoutes.post("/posts", privateRoute, adminController.addPost);
 adminRoutes.put("/posts/:slug", privateRoute, adminController.editPost);
 adminRoutes.delete("/posts/:slug", privateRoute, adminController.removePost);
+adminRoutes.get("/posts", privateRoute, adminController.getPosts);
+adminRoutes.get("/posts/:slug", privateRoute, adminController.getPost);

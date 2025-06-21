@@ -56,3 +56,18 @@ export const deletePost = async (slug: string) => {
         where: {slug}
     });
 }
+
+export const getAllPosts = async (page: number) => {
+    let perPage = 5;
+    const posts = await prisma.post.findMany({
+        include: {
+            author: {
+                select: {name: true}
+            }
+        },
+        orderBy: {createdAt: 'desc'},
+        take: perPage,
+        skip: (page - 1) * perPage
+    });
+    return posts;
+}
